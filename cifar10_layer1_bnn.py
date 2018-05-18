@@ -13,7 +13,7 @@ from tensorflow.python.keras._impl.keras.datasets.cifar10 import load_data
 (x_train, y_train), (x_test, y_test) = load_data()
 
 # parameters
-N = 1024   # number of images in a minibatch.
+N = 256   # number of images in a minibatch.
 D = 3072   # number of features.
 K = 10    # number of classes.
 
