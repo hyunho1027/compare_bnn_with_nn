@@ -11,7 +11,7 @@ import pandas as pd
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
 # parameters
-N = 100   # number of images in a minibatch.
+N = 128   # number of images in a minibatch.
 D = 784   # number of features.
 K = 10    # number of classes.
 
@@ -83,15 +83,6 @@ Y_test = np.argmax(mnist.test.labels,axis=1)
 # Generate samples the posterior and store them.
 n_samples = 10
 prob_lst = []
-samples1 = []
-samples2 = []
-samples3 = []
-w1_samples = []
-b1_samples = []
-w2_samples = []
-b2_samples = []
-w3_samples = []
-b3_samples = []
 for i in range(n_samples):
     w1_samp = qw1.sample()
     b1_samp = qb1.sample()
@@ -99,23 +90,10 @@ for i in range(n_samples):
     b2_samp = qb2.sample()
     w3_samp = qw3.sample()
     b3_samp = qb3.sample()
-    w1_samples.append(w1_samp)
-    b1_samples.append(b1_samp)
-    w2_samples.append(w2_samp)
-    b2_samples.append(b2_samp)
-    w3_samples.append(w3_samp)
-    b3_samples.append(b3_samp)
 
     # Also compue the probabiliy of each class for each (w,b) sample.
-
     prob = tf.nn.softmax(tf.matmul(tf.matmul(tf.matmul( X_test, w1_samp) + b1_samp, w2_samp) + b2_samp, w3_samp) + b3_samp)
     prob_lst.append(prob.eval())
-    sample1 = tf.concat([tf.reshape(w1_samp,[-1]),b1_samp],0)
-    sample2 = tf.concat([tf.reshape(w2_samp,[-1]),b2_samp],0)
-    sample3 = tf.concat([tf.reshape(w3_samp,[-1]),b3_samp],0)
-    samples1.append(sample1.eval())
-    samples2.append(sample2.eval())
-    samples3.append(sample3.eval())
     
     if not (i+1)%10:
         print(i+1, "steps completed.")

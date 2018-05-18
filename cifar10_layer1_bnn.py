@@ -4,6 +4,7 @@ import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 from edward.models import Categorical, Normal
 import edward as ed
+import random
 
 # CIFAR-10 데이터를 다운로드 받기 위한 helpder 모듈인 load_data 모듈을 임포트합니다.
 from tensorflow.python.keras._impl.keras.datasets.cifar10 import load_data
@@ -12,7 +13,7 @@ from tensorflow.python.keras._impl.keras.datasets.cifar10 import load_data
 (x_train, y_train), (x_test, y_test) = load_data()
 
 # parameters
-N = 50000   # number of images in a minibatch.
+N = 1024   # number of images in a minibatch.
 D = 3072   # number of features.
 K = 10    # number of classes.
 
@@ -42,7 +43,7 @@ y_ph = tf.placeholder(tf.int32, [N])
 inference = ed.KLqp({w: qw, b: qb}, data={y:y_ph})
 
 # Initialse the infernce variables
-inference.initialize(n_iter=1000, n_print=1, scale={y: float(len(x_train) / N)})
+inference.initialize(n_iter=10000, n_print=1, scale={y: float(len(x_train) / N)})
 
 # We will use an interactive session.
 sess = tf.InteractiveSession()
@@ -50,8 +51,8 @@ sess = tf.InteractiveSession()
 tf.global_variables_initializer().run()
 
 # Let the training begin. We load the data in minibatches and update the VI infernce using each new batch.
-for _ in range(inference.n_iter):
-    X_batch, Y_batch = x_train, np.reshape(sess.run(y_train),(-1,10))
+for i in range(inference.n_iter):
+    X_batch, Y_batch = random.sample(list(x_train),N), random.sample(list(np.reshape(sess.run(y_train),(-1,10))),N)
     # TensorFlow method gives the label data in a one hot vetor format. We convert that into a single label.
     Y_batch = np.argmax(Y_batch,axis=1)
     info_dict = inference.update(feed_dict={x: X_batch, y_ph: Y_batch})

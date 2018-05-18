@@ -9,7 +9,7 @@ import edward as ed
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
 # parameters
-N = 100   # number of images in a minibatch.
+N = 128   # number of images in a minibatch.
 D = 784   # number of features.
 K = 10    # number of classes.
 
@@ -58,21 +58,14 @@ Y_test = np.argmax(mnist.test.labels,axis=1)
 # Generate samples the posterior and store them.
 n_samples = 10
 prob_lst = []
-samples = []
-w_samples = []
-b_samples = []
+
 for i in range(n_samples):
     w_samp = qw.sample()
     b_samp = qb.sample()
-    w_samples.append(w_samp)
-    b_samples.append(b_samp)
+
     # Also compue the probabiliy of each class for each (w,b) sample.
-    print(X_test.shape, w_samp.shape,b_samp.shape)
-    
     prob = tf.nn.softmax(tf.matmul( X_test,w_samp ) + b_samp)
     prob_lst.append(prob.eval())
-    sample = tf.concat([tf.reshape(w_samp,[-1]),b_samp],0)
-    samples.append(sample.eval())
     if not (i+1)%10:
         print(i+1, "steps completed.")
 

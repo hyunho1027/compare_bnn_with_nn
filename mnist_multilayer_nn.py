@@ -10,9 +10,9 @@ mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 # more information about the mnist dataset
 
 # parameters
-learning_rate = 0.01
+learning_rate = 0.001
 training_epochs = 10
-batch_size = 100
+batch_size = 128
 D = 784   # number of features.
 K = 10    # number of classes.
 

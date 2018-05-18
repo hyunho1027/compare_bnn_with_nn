@@ -10,27 +10,27 @@ from tensorflow.python.keras._impl.keras.datasets.cifar10 import load_data
 (x_train, y_train), (x_test, y_test) = load_data()
 
 # parameters
-learning_rate = 0.01
+learning_rate = 0.001
 training_epochs = 10
-batch_size = 100
+batch_size = 128
 D = 3072   # number of features.
 K = 10    # number of classes.
-
+M = 256   # nuber of mid dimension
 
 # input place holders
 X = tf.placeholder(tf.float32, [None, D])
 Y = tf.placeholder(tf.float32, [None, K])
 
 # weights & bias for nn layers
-W1 = tf.Variable(tf.random_normal([D, 1536]))
-b1 = tf.Variable(tf.random_normal([1536]))
+W1 = tf.Variable(tf.random_normal([D, M]))
+b1 = tf.Variable(tf.random_normal([M]))
 L1 = tf.nn.relu(tf.matmul(X, W1) + b1)
 
-W2 = tf.Variable(tf.random_normal([1536, 1536]))
-b2 = tf.Variable(tf.random_normal([1536]))
+W2 = tf.Variable(tf.random_normal([M, M]))
+b2 = tf.Variable(tf.random_normal([M]))
 L2 = tf.nn.relu(tf.matmul(L1, W2) + b2)
 
-W3 = tf.Variable(tf.random_normal([1536, K]))
+W3 = tf.Variable(tf.random_normal([M, K]))
 b3 = tf.Variable(tf.random_normal([K]))
 hypothesis = tf.matmul(L2, W3) + b3
 
