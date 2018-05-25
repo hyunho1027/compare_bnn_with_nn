@@ -1,2 +1,4 @@
 #MNIST_data
 MNIST_data/
+log/
+.ipynb_checkpoints/

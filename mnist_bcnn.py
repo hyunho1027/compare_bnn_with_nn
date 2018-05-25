@@ -1,81 +1,72 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
-from edward.models import Categorical, Normal
+from edward.models import Categorical, Normal, Empirical
 import edward as ed
-import random
+import pandas as pd
 
-# CIFAR-10 데이터를 다운로드 받기 위한 helpder 모듈인 load_data 모듈을 임포트합니다.
-from tensorflow.python.keras._impl.keras.datasets.cifar10 import load_data
-
-# CIFAR-10 데이터를 다운로드하고 데이터를 불러옵니다.
-(x_train, y_train), (x_test, y_test) = load_data()
+# Use the TensorFlow method to download and/or load the data.
+mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
 # parameters
-N = 256   # number of images in a minibatch.
+N = 128   # number of images in a minibatch.
+D = 784   # number of features.
+K = 10    # number of classes.
 
 
 with tf.name_scope('model'):
     # Create a placeholder to hold the data (in minibatches) in a TensorFlow graph.
-    x = tf.placeholder(tf.float32, [None, 32, 32, 3])
+    x = tf.placeholder(tf.float32, [None, 28, 28, 1])
 
     # Normal(0,1) priors for the variables. Note that the syntax assumes TensorFlow 1.1.
-    w1 = Normal(loc=tf.zeros([3, 3, 3, 32]), scale=tf.ones([3, 3, 3, 32]))
+    w1 = Normal(loc=tf.zeros([3, 3, 1, 32]), scale=tf.ones([3, 3, 1, 32]))
     l1 = tf.nn.conv2d(x, w1, strides=[1, 1, 1, 1], padding='SAME')
-    # l1 = tf.nn.relu(l1)
+    l1 = tf.nn.relu(l1)
     l1 = tf.nn.max_pool(l1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
     w2 = Normal(loc=tf.zeros([3, 3, 32, 64]), scale=tf.ones([3, 3, 32, 64]))
     l2 = tf.nn.conv2d(l1, w2, strides=[1, 1, 1, 1], padding='SAME')
-    # l2 = tf.nn.relu(l2)
+    l2 = tf.nn.relu(l2)
     l2 = tf.nn.max_pool(l2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
     w3 = Normal(loc=tf.zeros([3, 3, 64, 128]), scale=tf.ones([3, 3, 64, 128]))
     l3 = tf.nn.conv2d(l2, w3, strides=[1, 1, 1, 1], padding='SAME')
-    # l3 = tf.nn.relu(l3)
+    l3 = tf.nn.relu(l3)
     l3 = tf.nn.max_pool(l3, ksize=[1, 2, 2, 1], strides=[ 1, 2, 2, 1], padding='SAME')
 
     l3_flat = tf.reshape(l3, [-1, 128 * 4 * 4])
 
     w4 = Normal(loc=tf.zeros([128 * 4 * 4, 625]), scale=tf.ones([128 * 4 * 4, 625]))
     b4 = Normal(loc=tf.zeros(625), scale=tf.ones(625))
-    l4 = tf.matmul(l3_flat, w4) + b4
-    # l4 = tf.nn.relu(tf.matmul(l3_flat, w4) + b4)
+    l4 = tf.nn.relu(tf.matmul(l3_flat, w4) + b4)
 
     w5 = Normal(loc=tf.zeros([625, 10]), scale=tf.ones([625, 10]))
     b5 = Normal(loc=tf.zeros(10), scale=tf.ones(10))
 
     # Categorical likelihood for classication.
     y = Categorical(tf.matmul(l4,w5)+b5)
+
+    T=1
+    
 with tf.name_scope("posterior"):
     # Contruct the q(w) and q(b). in this case we assume Normal distributions.
-    qw1 = Normal(loc=tf.Variable(tf.random_normal([3, 3, 3, 32])),
-                scale=tf.nn.softplus(tf.Variable(tf.random_normal([3, 3, 3, 32]))))
-    qw2 = Normal(loc=tf.Variable(tf.random_normal([3, 3, 32, 64])),
-                scale=tf.nn.softplus(tf.Variable(tf.random_normal([3, 3, 32, 64]))))
-    qw3 = Normal(loc=tf.Variable(tf.random_normal([3, 3, 64, 128])),
-                scale=tf.nn.softplus(tf.Variable(tf.random_normal([3, 3, 64, 128]))))
-    qw4 = Normal(loc=tf.Variable(tf.random_normal([128 * 4 * 4, 625])),
-                scale=tf.nn.softplus(tf.Variable(tf.random_normal([128 * 4 * 4, 625]))))       
-    qw5 = Normal(loc=tf.Variable(tf.random_normal([625, 10])),
-                scale=tf.nn.softplus(tf.Variable(tf.random_normal([625, 10]))))
-    qb4 = Normal(loc=tf.Variable(tf.random_normal([625])),
-                scale=tf.nn.softplus(tf.Variable(tf.random_normal([625]))))
-    qb5 = Normal(loc=tf.Variable(tf.random_normal([10])),
-                scale=tf.nn.softplus(tf.Variable(tf.random_normal([10]))))
-
-y_train = tf.one_hot(y_train, 10)
-y_test = tf.one_hot(y_test, 10)
-
+    qw1 = Empirical(params = tf.Variable(1/1000 *tf.random_normal([T,3,3,1,32])))
+    qw2 = Empirical(params = tf.Variable(1/1000 *tf.random_normal([T,3,3,32,64])))
+    qw3 = Empirical(params = tf.Variable(1/1000 *tf.random_normal([T,3,3,64,128])))
+    qw4 = Empirical(params = tf.Variable(1/1000 *tf.random_normal([T,128*4*4,625])))
+    qw5 = Empirical(params = tf.Variable(1/1000 *tf.random_normal([T,625,10])))
+    qb4 = Empirical(params = tf.Variable(1/1000 *tf.random_normal([T,625])))
+    qb5 = Empirical(params = tf.Variable(1/1000 *tf.random_normal([T,10])))
 # We use a placeholder for the labels in anticipation of the traning data.
 y_ph = tf.placeholder(tf.int32, [N])
 # Define the VI inference technique, ie. minimise the KL divergence between q and p.
-inference = ed.KLqp({w1: qw1, w2: qw2, w3: qw3, w4: qw4, w5: qw5,
+inference = ed.SGHMC({w1: qw1, w2: qw2, w3: qw3, w4: qw4, w5: qw5,
                      b4: qb4, b5: qb5 }, data={y:y_ph})
 
 # Initialse the infernce variables
-inference.initialize(n_iter=1000, n_print=1, scale={y: float(len(x_train) / N)}, logdir='log')
+inference.initialize(n_iter=10000, n_print=100, scale={y: float(mnist.train.num_examples) / N})
 
 # We will use an interactive session.
 sess = tf.InteractiveSession()
@@ -84,18 +75,17 @@ tf.global_variables_initializer().run()
 
 # Let the training begin. We load the data in minibatches and update the VI infernce using each new batch.
 for _ in range(inference.n_iter):
-    n = random.randint(0,50000-N)
-    X_batch, Y_batch = list(x_train)[n:n+N], list(np.reshape(sess.run(y_train),(-1,10)))[n:n+N]
+    X_batch, Y_batch = mnist.train.next_batch(N)
     # TensorFlow method gives the label data in a one hot vetor format. We convert that into a single label.
     Y_batch = np.argmax(Y_batch,axis=1)
-    info_dict = inference.update(feed_dict={x: X_batch, y_ph: Y_batch})
+    info_dict = inference.update(feed_dict={x: np.reshape(X_batch,[-1,28,28,1]), y_ph: Y_batch})
     inference.print_progress(info_dict)
 
 
 # Load the test images.
-X_test = tf.convert_to_tensor(x_test,dtype=tf.float32)
+X_test = mnist.test.images
 # TensorFlow method gives the label data in a one hot vetor format. We convert that into a single label.
-Y_test = np.argmax(np.reshape(sess.run(y_test),(-1,10)),axis=1)
+Y_test = np.argmax(mnist.test.labels,axis=1)
 
 # Generate samples the posterior and store them.
 n_samples = 5
@@ -110,22 +100,21 @@ for i in range(n_samples):
     b5_samp = qb5.sample()
     # Also compue the probabiliy of each class for each (w,b) sample.
 
-    l1_samp = tf.nn.conv2d(X_test, w1_samp, strides=[1, 1, 1, 1], padding='SAME')
-    # l1_samp = tf.nn.relu(l1_samp)
+    l1_samp = tf.nn.conv2d(np.reshape(X_test,[-1,28,28,1]), w1_samp, strides=[1, 1, 1, 1], padding='SAME')
+    l1_samp = tf.nn.relu(l1_samp)
     l1_samp = tf.nn.max_pool(l1_samp, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
     l2_samp = tf.nn.conv2d(l1_samp, w2_samp, strides=[1, 1, 1, 1], padding='SAME')
-    # l2_samp = tf.nn.relu(l2_samp)
+    l2_samp = tf.nn.relu(l2_samp)
     l2_samp = tf.nn.max_pool(l2_samp, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
     l3_samp = tf.nn.conv2d(l2_samp, w3_samp, strides=[1, 1, 1, 1], padding='SAME')
-    # l3_samp = tf.nn.relu(l3_samp)
+    l3_samp = tf.nn.relu(l3_samp)
     l3_samp = tf.nn.max_pool(l3_samp, ksize=[1, 2, 2, 1], strides=[ 1, 2, 2, 1], padding='SAME')
 
     l3_flat_samp = tf.reshape(l3_samp, [-1, 128 * 4 * 4])
 
-    l4_samp = tf.matmul(l3_flat_samp, w4_samp) + b4_samp
-    # l4_samp = tf.nn.relu(tf.matmul(l3_flat_samp, w4_samp) + b4_samp)
+    l4_samp = tf.nn.relu(tf.matmul(l3_flat_samp, w4_samp) + b4_samp)
 
     l5_samp = tf.matmul(l4_samp,w5_samp)+b5_samp
 
@@ -134,11 +123,6 @@ for i in range(n_samples):
     print(i+1, "steps completed.")
 
 
-# Compute the accuracy of the model. 
-# For each sample we compute the predicted class and compare with the test labels.
-# Predicted class is defined as the one which as maximum proability.
-# We perform this test for each (w,b) in the posterior giving us a set of accuracies
-# Finally we make a histogram of accuracies for the test data.
 accy_test = []
 for prob in prob_lst:
     y_trn_prd = np.argmax(prob,axis=1).astype(np.float32)

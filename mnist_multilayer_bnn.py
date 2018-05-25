@@ -11,7 +11,7 @@ import pandas as pd
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
 # parameters
-N = 256   # number of images in a minibatch.
+N = 128   # number of images in a minibatch.
 D = 784   # number of features.
 K = 10    # number of classes.
 
@@ -21,11 +21,12 @@ x = tf.placeholder(tf.float32, [None, D])
 # Normal(0,1) priors for the variables. Note that the syntax assumes TensorFlow 1.1.
 w1 = Normal(loc=tf.zeros([D, 256]), scale=tf.ones([D, 256]))
 b1 = Normal(loc=tf.zeros(256), scale=tf.ones(256))
-l1 = tf.matmul(x,w1)+b1
+l1 = tf.nn.relu(tf.matmul(x,w1)+b1)
+
 
 w2 = Normal(loc=tf.zeros([256, 256]), scale=tf.ones([256, 256]))
 b2 = Normal(loc=tf.zeros(256), scale=tf.ones(256))
-l2 = tf.matmul(l1,w2)+b2
+l2 = tf.nn.relu(tf.matmul(l1,w2)+b2)
 
 
 w3 = Normal(loc=tf.zeros([256, K]), scale=tf.ones([256, K]))
@@ -95,8 +96,7 @@ for i in range(n_samples):
     prob = tf.nn.softmax(tf.matmul(tf.matmul(tf.matmul( X_test, w1_samp) + b1_samp, w2_samp) + b2_samp, w3_samp) + b3_samp)
     prob_lst.append(prob.eval())
     
-    if not (i+1)%10:
-        print(i+1, "steps completed.")
+    print(i+1, "steps completed.")
 
 
 # Compute the accuracy of the model. 

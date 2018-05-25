@@ -13,10 +13,9 @@ from tensorflow.python.keras._impl.keras.datasets.cifar10 import load_data
 (x_train, y_train), (x_test, y_test) = load_data()
 
 # parameters
-N = 256   # number of images in a minibatch.
+N = 50000  # number of images in a minibatch.
 D = 3072   # number of features.
 K = 10    # number of classes.
-
 
 # Create a placeholder to hold the data (in minibatches) in a TensorFlow graph.
 x = tf.placeholder(tf.float32, [None, D])
@@ -43,7 +42,7 @@ y_ph = tf.placeholder(tf.int32, [N])
 inference = ed.KLqp({w: qw, b: qb}, data={y:y_ph})
 
 # Initialse the infernce variables
-inference.initialize(n_iter=10000, n_print=1, scale={y: float(len(x_train) / N)})
+inference.initialize(n_iter=1000, n_print=1, scale={y: float(len(x_train) / N)})
 
 # We will use an interactive session.
 sess = tf.InteractiveSession()
@@ -52,12 +51,11 @@ tf.global_variables_initializer().run()
 
 # Let the training begin. We load the data in minibatches and update the VI infernce using each new batch.
 for i in range(inference.n_iter):
-    X_batch, Y_batch = random.sample(list(x_train),N), random.sample(list(np.reshape(sess.run(y_train),(-1,10))),N)
+    X_batch, Y_batch = list(x_train), list(np.reshape(sess.run(y_train),(-1,10)))
     # TensorFlow method gives the label data in a one hot vetor format. We convert that into a single label.
     Y_batch = np.argmax(Y_batch,axis=1)
     info_dict = inference.update(feed_dict={x: X_batch, y_ph: Y_batch})
     inference.print_progress(info_dict)
-
 
 # Load the test images.
 X_test = tf.convert_to_tensor(x_test,dtype=tf.float32)
