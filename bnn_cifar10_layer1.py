@@ -56,7 +56,7 @@ for i in range(inference.n_iter):
 # Load the test images.
 X_test = np.reshape(test_data[0],(-1,32*32*3)).astype(np.float32)
 # TensorFlow method gives the label data in a one hot vetor format. We convert that into a single label.
-Y_test = test_data[1]
+Y_test = np.reshape(test_data[1],(-1))
 
 # Generate samples the posterior and store them.
 n_samples = 10
@@ -75,7 +75,6 @@ for i in range(n_samples):
 accy_test = []
 for prob in prob_lst:
     y_trn_prd = np.argmax(prob,axis=1).astype(np.float32)
-    print(y_trn_prd)
     acc = (y_trn_prd == Y_test).mean()
     accy_test.append(acc)
 

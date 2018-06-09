@@ -25,7 +25,7 @@ W1 = tf.Variable(tf.random_normal([3, 3, 1, 32], stddev=0.01))
 #    Conv     -> (?, 28, 28, 32)
 #    Pool     -> (?, 14, 14, 32)
 L1 = tf.nn.conv2d(X_img, W1, strides=[1, 1, 1, 1], padding='SAME')
-L1 = tf.nn.relu(L1)
+L1 = tf.nn.leaky_relu(L1)
 L1 = tf.nn.max_pool(L1, ksize=[1, 2, 2, 1],
                     strides=[1, 2, 2, 1], padding='SAME')
 
@@ -34,7 +34,7 @@ W2 = tf.Variable(tf.random_normal([3, 3, 32, 64], stddev=0.01))
 #    Conv      ->(?, 14, 14, 64)
 #    Pool      ->(?, 7, 7, 64)
 L2 = tf.nn.conv2d(L1, W2, strides=[1, 1, 1, 1], padding='SAME')
-L2 = tf.nn.relu(L2)
+L2 = tf.nn.leaky_relu(L2)
 L2 = tf.nn.max_pool(L2, ksize=[1, 2, 2, 1],
                     strides=[1, 2, 2, 1], padding='SAME')
 
@@ -44,7 +44,7 @@ W3 = tf.Variable(tf.random_normal([3, 3, 64, 128], stddev=0.01))
 #    Pool      ->(?, 4, 4, 128)
 #    Reshape   ->(?, 4 * 4 * 128) # Flatten them for FC
 L3 = tf.nn.conv2d(L2, W3, strides=[1, 1, 1, 1], padding='SAME')
-L3 = tf.nn.relu(L3)
+L3 = tf.nn.leaky_relu(L3)
 L3 = tf.nn.max_pool(L3, ksize=[1, 2, 2, 1], strides=[
                     1, 2, 2, 1], padding='SAME')
 L3_flat = tf.reshape(L3, [-1, 128 * 4 * 4])
@@ -53,7 +53,7 @@ L3_flat = tf.reshape(L3, [-1, 128 * 4 * 4])
 W4 = tf.get_variable("W4", shape=[128 * 4 * 4, 625],
                      initializer=tf.contrib.layers.xavier_initializer())
 b4 = tf.Variable(tf.random_normal([625]))
-L4 = tf.nn.relu(tf.matmul(L3_flat, W4) + b4)
+L4 = tf.nn.leaky_relu(tf.matmul(L3_flat, W4) + b4)
 
 # L5 Final FC 625 inputs -> 10 outputs
 W5 = tf.get_variable("W5", shape=[625, 10],

@@ -1,24 +1,28 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
-from tensorflow.examples.tutorials.mnist import input_data
 from edward.models import Categorical, Normal
 import edward as ed
 
-# Use the TensorFlow method to download and/or load the data.
-mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+def next_batch(dataset, N, i):
+    left = i*N % len(dataset[0])
+    right = (i+1)*N % len(dataset[0])
+    
+    if left < right :
+        return dataset[0][left:right], dataset[1][left:right]
+    else:
+        return np.vstack((dataset[0][left:],dataset[0][:right])), np.vstack((dataset[1][left:],dataset[1][:right]))
+
+train_data, test_data = tf.keras.datasets.cifar10.load_data()
 
 # parameters
-N = 256   # number of images in a minibatch.
-D = 784   # number of features.
-K = 10    # number of classes.
+N = 32  # number of images in a minibatch.
 
 # input place holders
-X = tf.placeholder(tf.float32, [None, 784])
-x = tf.reshape(X, [-1, 28, 28, 1])   # img 28x28x1 (black/white)
+x = tf.placeholder(tf.float32, [None, 32,32,3])
 
 # Normal(0,1) priors for the variables. Note that the syntax assumes TensorFlow 1.1.
-w1 = Normal(loc=tf.zeros([3, 3, 1, 32]), scale=tf.ones([3, 3, 1, 32]))
+w1 = Normal(loc=tf.zeros([3, 3, 3, 32]), scale=tf.ones([3, 3, 3, 32]))
 l1 = tf.nn.conv2d(x, w1, strides=[1, 1, 1, 1], padding='SAME')
 l1 = tf.nn.leaky_relu(l1)
 l1 = tf.nn.max_pool(l1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
@@ -47,8 +51,8 @@ b5 = Normal(loc=tf.zeros(10), scale=tf.ones(10))
 y = Categorical(tf.matmul(l4,w5)+b5)
 
 # Contruct the q(w) and q(b). in this case we assume Normal distributions.
-qw1 = Normal(loc=tf.Variable(tf.random_normal([3, 3, 1, 32])),
-            scale=tf.nn.softplus(tf.Variable(tf.random_normal([3, 3, 1, 32]))))
+qw1 = Normal(loc=tf.Variable(tf.random_normal([3, 3, 3, 32])),
+            scale=tf.nn.softplus(tf.Variable(tf.random_normal([3, 3, 3, 32]))))
 qw2 = Normal(loc=tf.Variable(tf.random_normal([3, 3, 32, 64])),
             scale=tf.nn.softplus(tf.Variable(tf.random_normal([3, 3, 32, 64]))))
 qw3 = Normal(loc=tf.Variable(tf.random_normal([3, 3, 64, 128])),
@@ -70,7 +74,7 @@ inference = ed.KLqp({w1: qw1, w2: qw2, w3: qw3, w4: qw4, w5: qw5,
                      b4: qb4, b5: qb5 }, data={y:y_ph})
 
 # Initialse the infernce variables
-inference.initialize(n_iter=10000, n_print=100, scale={y: float(mnist.train.num_examples) / N})
+inference.initialize(n_iter=10000, n_print=100, scale={y: float(len(train_data[0])) / N})
 
 # We will use an interactive session.
 sess = tf.InteractiveSession()
@@ -78,18 +82,16 @@ sess = tf.InteractiveSession()
 tf.global_variables_initializer().run()
 
 # Let the training begin. We load the data in minibatches and update the VI infernce using each new batch.
-for _ in range(inference.n_iter):
-    X_batch, Y_batch = mnist.train.next_batch(N)
-    # TensorFlow method gives the label data in a one hot vetor format. We convert that into a single label.
-    Y_batch = np.argmax(Y_batch,axis=1)
-    info_dict = inference.update(feed_dict={X: X_batch, y_ph: Y_batch})
+for i in range(inference.n_iter):
+    X_batch, Y_batch = next_batch(train_data,N,i)
+    info_dict = inference.update(feed_dict={x: X_batch, y_ph: np.reshape(Y_batch,(-1))})
     inference.print_progress(info_dict)
 
 
 # Load the test images.
-X_test = np.reshape(mnist.test.images,(-1,28,28,1))
+X_test = test_data[0].astype(np.float32)
 # TensorFlow method gives the label data in a one hot vetor format. We convert that into a single label.
-Y_test = np.argmax(mnist.test.labels,axis=1)
+Y_test = np.reshape(test_data[1],(-1))
 
 # Generate samples the posterior and store them.
 n_samples = 5
