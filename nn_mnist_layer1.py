@@ -1,19 +1,19 @@
+# Lab 10 MNIST and NN
 import tensorflow as tf
 import random
 import matplotlib.pyplot as plt
-import numpy as np
 
-# CIFAR-10 데이터를 다운로드 받기 위한 helpder 모듈인 load_data 모듈을 임포트합니다.
-from tensorflow.python.keras._impl.keras.datasets.cifar10 import load_data
+from tensorflow.examples.tutorials.mnist import input_data
 
-# CIFAR-10 데이터를 다운로드하고 데이터를 불러옵니다.
-(x_train, y_train), (x_test, y_test) = load_data()
+mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+# Check out https://www.tensorflow.org/get_started/mnist/beginners for
+# more information about the mnist dataset
 
 # parameters
 learning_rate = 0.001
 training_epochs = 10
 batch_size = 128
-D = 3072   # number of features.
+D = 784   # number of features.
 K = 10    # number of classes.
 
 
@@ -23,12 +23,7 @@ Y = tf.placeholder(tf.float32, [None, K])
 
 W1 = tf.Variable(tf.random_normal([D, K]))
 b1 = tf.Variable(tf.random_normal([K]))
-hypothesis = tf.nn.relu(tf.matmul(X, W1) + b1)
-
-x_train = np.reshape(x_train,(-1,3072))
-x_test = np.reshape(x_test,(-1,3072))
-y_train = tf.one_hot(y_train, 10)
-y_test = tf.one_hot(y_test, 10)
+hypothesis = tf.matmul(X, W1) + b1
 
 # define cost/loss & optimizer
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
@@ -42,10 +37,9 @@ sess.run(tf.global_variables_initializer())
 # train my model
 for epoch in range(training_epochs):
     avg_cost = 0
-    total_batch = int(len(x_train) / batch_size)
-    start_batch = epoch * total_batch
+    total_batch = int(mnist.train.num_examples / batch_size)
     for i in range(total_batch):
-        batch_xs, batch_ys = x_train[start_batch:start_batch+total_batch,:], np.reshape(sess.run(y_train[start_batch:start_batch+total_batch,:]),(-1,10))
+        batch_xs, batch_ys = mnist.train.next_batch(batch_size)
         feed_dict = {X: batch_xs, Y: batch_ys}
         c, _ = sess.run([cost, optimizer], feed_dict=feed_dict)
         avg_cost += c / total_batch
@@ -58,4 +52,14 @@ print('Learning Finished!')
 correct_prediction = tf.equal(tf.argmax(hypothesis, 1), tf.argmax(Y, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 print('Accuracy:', sess.run(accuracy, feed_dict={
-      X: x_test, Y: np.reshape(sess.run(y_test),(-1,10))}))
+      X: mnist.test.images, Y: mnist.test.labels}))
+
+# Get one and predict
+r = random.randint(0, mnist.test.num_examples - 1)
+print("Label: ", sess.run(tf.argmax(mnist.test.labels[r:r + 1], 1)))
+print("Prediction: ", sess.run(
+    tf.argmax(hypothesis, 1), feed_dict={X: mnist.test.images[r:r + 1]}))
+
+plt.imshow(mnist.test.images[r:r + 1].
+          reshape(28, 28), cmap='Greys', interpolation='nearest')
+plt.show()

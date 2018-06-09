@@ -24,11 +24,11 @@ Y = tf.placeholder(tf.float32, [None, K])
 # weights & bias for nn layers
 W1 = tf.Variable(tf.random_normal([D, 256]))
 b1 = tf.Variable(tf.random_normal([256]))
-L1 = tf.nn.relu(tf.matmul(X, W1) + b1)
+L1 = tf.nn.leaky_relu(tf.matmul(X, W1) + b1)
 
 W2 = tf.Variable(tf.random_normal([256, 256]))
 b2 = tf.Variable(tf.random_normal([256]))
-L2 = tf.nn.relu(tf.matmul(L1, W2) + b2)
+L2 = tf.nn.leaky_relu(tf.matmul(L1, W2) + b2)
 
 W3 = tf.Variable(tf.random_normal([256, K]))
 b3 = tf.Variable(tf.random_normal([K]))
