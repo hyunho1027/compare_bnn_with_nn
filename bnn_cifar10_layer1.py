@@ -40,7 +40,7 @@ y_ph = tf.placeholder(tf.int32, [N])
 inference = ed.KLqp({w: qw, b: qb}, data={y:y_ph})
 
 # Initialse the infernce variables
-inference.initialize(n_iter= 50000, n_print=100, scale={y: float(len(train_data[0])) / N})
+inference.initialize(n_iter= 5000, n_print=100, scale={y: float(len(train_data[0])) / N})
 
 # We will use an interactive session.
 sess = tf.InteractiveSession()

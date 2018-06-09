@@ -23,31 +23,31 @@ K = 10    # number of classes.
 # Create a placeholder to hold the data (in minibatches) in a TensorFlow graph.
 x = tf.placeholder(tf.float32, [None, D])
 # Normal(0,1) priors for the variables. Note that the syntax assumes TensorFlow 1.1.
-w1 = Normal(loc=tf.zeros([D, 256]), scale=tf.ones([D, 256]))
-b1 = Normal(loc=tf.zeros(256), scale=tf.ones(256))
+w1 = Normal(loc=tf.zeros([D, 1024]), scale=tf.ones([D, 1024]))
+b1 = Normal(loc=tf.zeros(1024), scale=tf.ones(1024))
 l1 = tf.nn.leaky_relu(tf.matmul(x,w1)+b1)
 
-w2 = Normal(loc=tf.zeros([256, 256]), scale=tf.ones([256, 256]))
-b2 = Normal(loc=tf.zeros(256), scale=tf.ones(256))
+w2 = Normal(loc=tf.zeros([1024, 1024]), scale=tf.ones([1024, 1024]))
+b2 = Normal(loc=tf.zeros(1024), scale=tf.ones(1024))
 l2 = tf.nn.leaky_relu(tf.matmul(l1,w2)+b2)
 
-w3 = Normal(loc=tf.zeros([256, K]), scale=tf.ones([256, K]))
+w3 = Normal(loc=tf.zeros([1024, K]), scale=tf.ones([1024, K]))
 b3 = Normal(loc=tf.zeros(K), scale=tf.ones(K))
 
 # Categorical likelihood for classication.
 y = Categorical(tf.matmul(l2,w3)+b3)
 
 # Contruct the q(w) and q(b). in this case we assume Normal distributions.
-qw1 = Normal(loc=tf.Variable(tf.random_normal([D, 256])),
-              scale=tf.nn.softplus(tf.Variable(tf.random_normal([D, 256]))))
-qb1 = Normal(loc=tf.Variable(tf.random_normal([256])),
-              scale=tf.nn.softplus(tf.Variable(tf.random_normal([256]))))
-qw2 = Normal(loc=tf.Variable(tf.random_normal([256, 256])),
-              scale=tf.nn.softplus(tf.Variable(tf.random_normal([256, 256]))))
-qb2 = Normal(loc=tf.Variable(tf.random_normal([256])),
-              scale=tf.nn.softplus(tf.Variable(tf.random_normal([256]))))
-qw3 = Normal(loc=tf.Variable(tf.random_normal([256, K])),
-              scale=tf.nn.softplus(tf.Variable(tf.random_normal([256, K]))))
+qw1 = Normal(loc=tf.Variable(tf.random_normal([D, 1024])),
+              scale=tf.nn.softplus(tf.Variable(tf.random_normal([D, 1024]))))
+qb1 = Normal(loc=tf.Variable(tf.random_normal([1024])),
+              scale=tf.nn.softplus(tf.Variable(tf.random_normal([1024]))))
+qw2 = Normal(loc=tf.Variable(tf.random_normal([1024, 1024])),
+              scale=tf.nn.softplus(tf.Variable(tf.random_normal([1024, 1024]))))
+qb2 = Normal(loc=tf.Variable(tf.random_normal([1024])),
+              scale=tf.nn.softplus(tf.Variable(tf.random_normal([1024]))))
+qw3 = Normal(loc=tf.Variable(tf.random_normal([1024, K])),
+              scale=tf.nn.softplus(tf.Variable(tf.random_normal([1024, K]))))
 qb3 = Normal(loc=tf.Variable(tf.random_normal([K])),
               scale=tf.nn.softplus(tf.Variable(tf.random_normal([K]))))
 

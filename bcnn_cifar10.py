@@ -74,7 +74,7 @@ inference = ed.KLqp({w1: qw1, w2: qw2, w3: qw3, w4: qw4, w5: qw5,
                      b4: qb4, b5: qb5 }, data={y:y_ph})
 
 # Initialse the infernce variables
-inference.initialize(n_iter=10000, n_print=100, scale={y: float(len(train_data[0])) / N})
+inference.initialize(n_iter=5000, n_print=100, scale={y: float(len(train_data[0])) / N})
 
 # We will use an interactive session.
 sess = tf.InteractiveSession()
