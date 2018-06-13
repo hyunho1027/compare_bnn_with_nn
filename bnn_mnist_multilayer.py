@@ -75,7 +75,7 @@ X_test = mnist.test.images
 Y_test = np.argmax(mnist.test.labels,axis=1)
 
 # Generate samples the posterior and store them.
-n_samples = 10
+n_samples = 100
 prob_lst = []
 
 for i in range(n_samples):
