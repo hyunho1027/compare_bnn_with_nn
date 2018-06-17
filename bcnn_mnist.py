@@ -38,7 +38,7 @@ l3_flat = tf.reshape(l3, [-1, 128 * 4 * 4])
 w4 = Normal(loc=tf.zeros([128 * 4 * 4, 625]), scale=tf.ones([128 * 4 * 4, 625]))
 b4 = Normal(loc=tf.zeros(625), scale=tf.ones(625))
 l4 = tf.matmul(l3_flat, w4) + b4
-l4 = tf.nn.leaky_relu(tf.matmul(l3_flat, w4) + b4)
+l4 = tf.nn.leaky_relu(l4)
 
 w5 = Normal(loc=tf.zeros([625, 10]), scale=tf.ones([625, 10]))
 b5 = Normal(loc=tf.zeros(10), scale=tf.ones(10))
@@ -119,7 +119,7 @@ for i in range(n_samples):
     l3_flat_samp = tf.reshape(l3_samp, [-1, 128 * 4 * 4])
 
     l4_samp = tf.matmul(l3_flat_samp, w4_samp) + b4_samp
-    l4_samp = tf.nn.leaky_relu(tf.matmul(l3_flat_samp, w4_samp) + b4_samp)
+    l4_samp = tf.nn.leaky_relu(l4_samp)
 
     l5_samp = tf.matmul(l4_samp,w5_samp)+b5_samp
 
