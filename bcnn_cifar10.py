@@ -123,7 +123,7 @@ for i in range(n_samples):
     l4_samp = tf.matmul(l3_flat_samp, w4_samp) + b4_samp
     l4_samp = tf.nn.leaky_relu(l4_samp)
 
-    l5_samp = tf.matmul(l4_samp,w5_samp)+b5_samp
+    l5_samp = tf.matmul(l4_samp,w5_samp) + b5_samp
 
     prob = tf.nn.softmax(l5_samp)
     prob_lst.append(prob.eval())

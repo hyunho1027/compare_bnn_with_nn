@@ -9,7 +9,7 @@ import edward as ed
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
 # parameters
-N = 256   # number of images in a minibatch.
+N = 32   # number of images in a minibatch.
 D = 784   # number of features.
 K = 10    # number of classes.
 

@@ -1,23 +1,16 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
+from tensorflow.examples.tutorials.mnist import input_data
 from edward.models import Categorical, Normal
 import edward as ed
 
-def next_batch(dataset, N, i):
-    left = i*N % len(dataset[0])
-    right = (i+1)*N % len(dataset[0])
-    
-    if left < right :
-        return dataset[0][left:right], dataset[1][left:right]
-    else:
-        return np.vstack((dataset[0][left:],dataset[0][:right])), np.vstack((dataset[1][left:],dataset[1][:right]))
-
-train_data, test_data = tf.keras.datasets.cifar10.load_data()
+# Use the TensorFlow method to download and/or load the data.
+mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
 # parameters
-N = 256   # number of images in a minibatch.
-D = 32*32*3   # number of features.
+N = 128   # number of images in a minibatch.
+D = 784   # number of features.
 K = 10    # number of classes.
 
 # Create a placeholder to hold the data (in minibatches) in a TensorFlow graph.
@@ -40,7 +33,7 @@ y_ph = tf.placeholder(tf.int32, [N])
 inference = ed.KLqp({w: qw, b: qb}, data={y:y_ph})
 
 # Initialse the infernce variables
-inference.initialize(n_iter= 5000, n_print=100, scale={y: float(len(train_data[0])) / N})
+inference.initialize(n_iter= 5000, n_print=100, scale={y: float(mnist.train.num_examples) / N})
 
 # We will use an interactive session.
 sess = tf.InteractiveSession()
@@ -48,15 +41,17 @@ sess = tf.InteractiveSession()
 tf.global_variables_initializer().run()
 
 # Let the training begin. We load the data in minibatches and update the VI infernce using each new batch.
-for i in range(inference.n_iter):
-    X_batch, Y_batch = next_batch(train_data,N,i)
-    info_dict = inference.update(feed_dict={x: np.reshape(X_batch,(N,32*32*3)), y_ph: np.reshape(Y_batch,(-1))})
+for _ in range(inference.n_iter):
+    X_batch, Y_batch = mnist.train.next_batch(N)
+    # TensorFlow method gives the label data in a one hot vetor format. We convert that into a single label.
+    Y_batch = np.argmax(Y_batch,axis=1)
+    info_dict = inference.update(feed_dict={x: X_batch, y_ph: Y_batch})
     inference.print_progress(info_dict)
+    # Load the test images.
 
-# Load the test images.
-X_test = np.reshape(test_data[0],(-1,32*32*3)).astype(np.float32)
+X_test = mnist.test.images
 # TensorFlow method gives the label data in a one hot vetor format. We convert that into a single label.
-Y_test = test_data[1]
+Y_test = np.argmax(mnist.test.labels,axis=1)
 
 # Generate samples the posterior and store them.
 n_samples = 10
@@ -65,14 +60,13 @@ prob_lst = []
 for i in range(n_samples):
     w_samp = qw.sample()
     b_samp = qb.sample()
-
+    
     # Also compue the probabiliy of each class for each (w,b) sample.
-    prob = tf.nn.softmax(tf.matmul( X_test, w_samp ) + b_samp)
+    prob = tf.nn.softmax(tf.matmul( X_test,w_samp ) + b_samp)
     prob_lst.append(prob.eval())
     print(i+1, "steps completed.")
 
-
-accy_test = []
+    accy_test = []
 for prob in prob_lst:
     y_trn_prd = np.argmax(prob,axis=1).astype(np.float32)
     acc = (y_trn_prd == Y_test).mean()

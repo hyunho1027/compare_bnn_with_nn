@@ -47,11 +47,11 @@ K = 10
 
 W1 = tf.Variable(tf.random_normal([D, M]))
 b1 = tf.Variable(tf.random_normal([M]))
-L1 = tf.nn.relu(tf.matmul(X, W1) + b1)
+L1 = tf.nn.leaky_relu(tf.matmul(features, W1) + b1)
 
 W2 = tf.Variable(tf.random_normal([M, M]))
 b2 = tf.Variable(tf.random_normal([M]))
-L2 = tf.nn.relu(tf.matmul(L1, W2) + b2)
+L2 = tf.nn.leaky_relu(tf.matmul(L1, W2) + b2)
 
 W3 = tf.Variable(tf.random_normal([M, K]))
 b3 = tf.Variable(tf.random_normal([K]))

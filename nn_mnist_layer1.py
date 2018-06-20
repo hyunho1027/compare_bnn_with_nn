@@ -23,6 +23,7 @@ Y = tf.placeholder(tf.float32, [None, K])
 
 W1 = tf.Variable(tf.random_normal([D, K]))
 b1 = tf.Variable(tf.random_normal([K]))
+
 hypothesis = tf.matmul(X, W1) + b1
 
 # define cost/loss & optimizer

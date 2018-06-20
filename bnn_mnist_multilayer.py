@@ -9,7 +9,7 @@ import edward as ed
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
 # parameters
-N = 256   # number of images in a minibatch.
+N = 128   # number of images in a minibatch.
 D = 784   # number of features.
 K = 10    # number of classes.
 
@@ -75,7 +75,7 @@ X_test = mnist.test.images
 Y_test = np.argmax(mnist.test.labels,axis=1)
 
 # Generate samples the posterior and store them.
-n_samples = 100
+n_samples = 10
 prob_lst = []
 
 for i in range(n_samples):
